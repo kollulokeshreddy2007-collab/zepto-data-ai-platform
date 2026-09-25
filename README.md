@@ -42,8 +42,9 @@ python data_pipeline/build_db.py
 
 **Module 3 - Support Assistant** (see [`support_assistant/README.md`](support_assistant/README.md))
 ```bash
-python support_assistant/ingest.py       # build the ChromaDB index
-uvicorn support_assistant.app:app --reload
+cd support_assistant
+python ingest.py                 # build the ChromaDB index (downloads MiniLM once)
+uvicorn app:app --host 127.0.0.1 --port 8000   # MOCK_LLM defaults to offline mock
 ```
 
 ## Design decisions (summary)
