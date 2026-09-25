@@ -1,0 +1,155 @@
+Cleaning: started with 107 rows, dropped 0 unparseable, kept 107 rows.
+Applied fixed baseline conversion 1 GBP = 105.5 INR.
+
+Loaded 5 categories and 107 books into books.db.
+
+======================================================================
+STEP 5: SQL QUERIES
+======================================================================
+
+--- Q1 SELECT/WHERE - books rated 5 that are in stock ---
+SELECT title, rating, price_gbp
+        FROM books
+        WHERE rating = 5 AND in_stock = 1;
+                                                                   title  rating  price_gbp
+                                      1,000 Places to See Before You Die       5      26.08
+                                  A Time of Torment (Charlie Parker #14)       5      48.35
+       What Happened on Beale Street (Secrets of the South Mysteries #2)       5      25.37
+The Bachelor Girl's Guide to Murder (Herringford and Watts Mysteries #1)       5      52.30
+                                       The Silkworm (Cormoran Strike #2)       5      23.05
+                                                       The Girl You Lost       5      12.29
+                                 A Flight of Arrows (The Pathfinders #2)       5      55.53
+                                                            Mrs. Houdini       5      30.25
+                                                   The Passion of Dolssa       5      28.32
+                                                  Voyager (Outlander #3)       5      21.07
+                                                            The Red Tent       5      35.66
+                                                  Between Shades of Gray       5      20.79
+                                                     While You Were Mine       5      41.32
+                       A Spy's Devotion (The Regency Spies of London #1)       5      16.97
+              Quarter Life Poetry: Poems for the Young, Broke and Hangry       5      50.89
+                              Out of Print: City Lights Spotlight No. 14       5      53.64
+                                                       Les Fleurs du Mal       5      29.04
+                         Leave This Song Behind: Teen Poetry at Its Best       5      51.17
+The Collected Poems of W.B. Yeats (The Collected Works of W.B. Yeats #1)       5      15.42
+                                                                  Booked       5      17.49
+
+--- Q2 ORDER BY + LIMIT - 10 most expensive books (INR) ---
+SELECT title, price_inr
+        FROM books
+        ORDER BY price_inr DESC
+        LIMIT 10;
+                                                                 title  price_inr
+                                         Boar Island (Anna Pigeon #19)    6275.14
+                                                               Candide    6185.46
+The No. 1 Ladies' Detective Agency (No. 1 Ladies' Detective Agency #1)    6087.35
+                                        Slow States of Collapse: Poems    6046.20
+                                                           Animal Farm    6036.71
+                                      A Year in Provence (Provence #1)    6000.84
+                                                   The Past Never Ends    5960.75
+                                      The Last Painting of Sara de Vos    5860.52
+                               A Flight of Arrows (The Pathfinders #2)    5858.42
+             Alice in Wonderland (Alice's Adventures in Wonderland #1)    5858.42
+
+--- Q3 DISTINCT - the distinct rating values present ---
+SELECT DISTINCT rating
+        FROM books
+        ORDER BY rating;
+ rating
+      1
+      2
+      3
+      4
+      5
+
+--- Q4 BETWEEN + IN - mid-priced books in selected categories ---
+SELECT b.title, b.price_gbp, c.category_name
+        FROM books b
+        JOIN categories c ON b.category_id = c.category_id
+        WHERE b.price_gbp BETWEEN 20 AND 40
+          AND c.category_name IN ('Travel', 'Poetry', 'Classics')
+        ORDER BY b.price_gbp;
+                                                                                            title  price_gbp category_name
+                                                                            Shakespeare's Sonnets      20.66        Poetry
+The Road to Little Dribbling: Adventures of an American in Britain (Notes From a Small Island #2)      23.21        Travel
+                                                                                             Olio      23.88        Poetry
+                                                               1,000 Places to See Before You Die      26.08        Travel
+                    The Complete Stories and Poems (The Works of Edgar Allan Poe [Cameo Edition])      26.78      Classics
+                                                                   Little Women (Little Women #1)      28.07      Classics
+                                                                                The Metamorphosis      28.58      Classics
+                                                                                Les Fleurs du Mal      29.04        Poetry
+                                                                       The Picture of Dorian Gray      29.70      Classics
+                                                                         The Great Railway Bazaar      30.54        Travel
+                                                          Twenty Love Poems and a Song of Despair      30.95        Poetry
+                                                                               Gone with the Wind      32.49      Classics
+                                                                                             Emma      32.93      Classics
+                                                                   You can't bury them all: Poems      33.63        Poetry
+                                                                         And Then There Were None      35.01      Classics
+                              Vagabonding: An Uncommon Guide to the Art of Long-Term World Travel      36.94        Travel
+                                                                             Under the Tuscan Sun      37.33        Travel
+                                                                            Sense and Sensibility      37.46      Classics
+                                                                                          Beowulf      38.35      Classics
+                                                                                    The Crossover      38.77        Poetry
+                                                        Neither Here nor There: Travels in Europe      38.95        Travel
+
+--- Q5 JOIN + aggregation - avg price and book count per category ---
+SELECT c.category_name,
+               COUNT(*)              AS n_books,
+               ROUND(AVG(b.price_inr), 2) AS avg_price_inr
+        FROM books b
+        JOIN categories c ON b.category_id = c.category_id
+        GROUP BY c.category_name
+        ORDER BY avg_price_inr DESC;
+     category_name  n_books  avg_price_inr
+            Travel       11        4198.32
+          Classics       19        3855.53
+            Poetry       19        3795.28
+Historical Fiction       26        3549.47
+           Mystery       32        3346.36
+
+======================================================================
+STEP 6: PANDAS READ-BACK AND pd.merge EQUIVALENCE
+======================================================================
+
+pd.read_sql of Q3 (distinct ratings):
+ rating
+      1
+      2
+      3
+      4
+      5
+
+pd.read_sql of Q5 (avg price per category):
+     category_name  n_books  avg_price_inr
+            Travel       11        4198.32
+          Classics       19        3855.53
+            Poetry       19        3795.28
+Historical Fiction       26        3549.47
+           Mystery       32        3346.36
+
+--- JOIN via SQL (pd.read_sql) ---
+category_name                                                                         title  rating  price_inr
+     Classics                                                             The Secret Garden       4    1590.94
+     Classics                                                Little Women (Little Women #1)       4    2961.38
+     Classics The Complete Stories and Poems (The Works of Edgar Allan Poe [Cameo Edition])       4    2825.29
+     Classics                                                     The Story of Hong Gildong       4    4556.54
+     Classics                                                            Gone with the Wind       3    3427.70
+     Classics                                                                       Candide       3    6185.46
+     Classics                                                                   Animal Farm       3    6036.71
+     Classics                                                             Wuthering Heights       3    1870.52
+     Classics                                                        The Pilgrim's Progress       2    5302.43
+     Classics                            The Hound of the Baskervilles (Sherlock Holmes #5)       2    1563.51
+
+--- Same JOIN via pd.merge (no SQL) ---
+category_name                                                                         title  rating  price_inr
+     Classics                                                             The Secret Garden       4    1590.94
+     Classics                                                Little Women (Little Women #1)       4    2961.38
+     Classics The Complete Stories and Poems (The Works of Edgar Allan Poe [Cameo Edition])       4    2825.29
+     Classics                                                     The Story of Hong Gildong       4    4556.54
+     Classics                                                            Gone with the Wind       3    3427.70
+     Classics                                                                       Candide       3    6185.46
+     Classics                                                                   Animal Farm       3    6036.71
+     Classics                                                             Wuthering Heights       3    1870.52
+     Classics                                                        The Pilgrim's Progress       2    5302.43
+     Classics                            The Hound of the Baskervilles (Sherlock Holmes #5)       2    1563.51
+
+SQL JOIN result equals pd.merge result: True
