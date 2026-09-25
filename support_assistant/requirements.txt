@@ -1,0 +1,12 @@
+# Embeddings (local, no API key)
+sentence-transformers>=2.7
+# Vector store (local)
+chromadb>=0.5
+# Orchestration
+langgraph>=0.2
+# API
+fastapi>=0.111
+uvicorn[standard]>=0.30
+pydantic>=2.7
+# Optional real-LLM path (MOCK_LLM=0); unused by the graded mock baseline
+groq>=0.9
